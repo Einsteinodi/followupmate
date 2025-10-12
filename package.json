@@ -12,8 +12,8 @@
     "build:client": "cd client && npm run build",
     "start": "node dist/server/index.js",
     "install:all": "npm install && cd client && npm install",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
+    "predeploy": "npm run build:client",
+    "deploy": "gh-pages -d client/build",
      "homepage": "https://Einsteinodi.github.io/followupmate"
 
   },
