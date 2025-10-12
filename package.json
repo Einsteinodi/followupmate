@@ -13,7 +13,9 @@
     "start": "node dist/server/index.js",
     "install:all": "npm install && cd client && npm install",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+     "homepage": "https://Einsteinodi.github.io/followupmate"
+
   },
   "keywords": [
     "saas",
