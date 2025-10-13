@@ -1,5 +1,6 @@
 {
   "name": "followupmate-client",
+  "homepage": "https://Einsteinodi.github.io/followupmate",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -22,7 +23,6 @@
     "web-vitals": "^3.5.0"
   },
   "scripts": {
-    "homepage": "https://Einsteinodi.github.io/followupmate",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
