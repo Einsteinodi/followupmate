@@ -22,6 +22,7 @@
     "web-vitals": "^3.5.0"
   },
   "scripts": {
+    "homepage": "https://Einsteinodi.github.io/followupmate",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
