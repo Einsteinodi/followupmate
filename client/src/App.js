@@ -2601,11 +2601,11 @@ function LandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
                 <div className="text-center md:text-left">
                     <div className="w-40 h-40 rounded-full overflow-hidden mx-auto md:mx-0 mb-6">
-                        <img 
-                            src="/founder.jpg" 
-                            alt="Einstein - Founder" 
-                            className="w-full h-full object-cover"
-                        />
+                      <img
+                          src={`${process.env.PUBLIC_URL}/founder.jpg`}
+                          alt="Einstein - Founder"
+                          className="w-full h-full object-cover"
+                      />
                     </div>
                 </div>
                 <div className="md:col-span-2">
