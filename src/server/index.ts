@@ -31,10 +31,19 @@ app.set('trust proxy', 1);
 app.use(helmet());
 
 // CORS configuration
+const allowedOrigins = ['http://localhost:3000', 'https://einsteinodi.github.io'];
+
 app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation'));
+    }
+  },
+  credentials: true,
 }));
+
 
 // Rate limiting
 const limiter = rateLimit({
