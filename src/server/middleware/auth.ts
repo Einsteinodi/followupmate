@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import {  Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { db } from '../database/init';
+import { Request } from 'express';
 
 export interface AuthRequest extends Request {
   user?: {
