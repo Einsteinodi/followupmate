@@ -16,7 +16,8 @@
     "sourceMap": true,
     "allowJs": true,                  // ✅ allows .js files to be compiled
     "checkJs": false,                 // ✅ skips JS type-checking (optional, depends on your code)
-    "types": ["node", "express"]
+    "types": ["node", "express"],
+    "typeRoots": ["./node_modules/@types"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "client"]
