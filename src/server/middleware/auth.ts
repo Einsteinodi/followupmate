@@ -1,9 +1,14 @@
-import {  Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { db } from '../database/init';
-import { Request } from 'express';
 
-export interface AuthRequest extends Request {
+// Generic version of AuthRequest
+export interface AuthRequest<
+  Params = any,
+  ResBody = any,
+  ReqBody = any,
+  ReqQuery = any
+> extends Request<Params, ResBody, ReqBody, ReqQuery> {
   user?: {
     id: number;
     email: string;
@@ -12,7 +17,11 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -21,21 +30,28 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
-    
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || 'your-secret-key'
+    ) as { userId: number };
+
     // Get user from database
     const user = await new Promise((resolve, reject) => {
-      db.get('SELECT id, name, email, subscription_plan FROM users WHERE id = ?', [decoded.userId], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
+      db.get(
+        'SELECT id, name, email, subscription_plan FROM users WHERE id = ?',
+        [decoded.userId],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
     });
 
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
 
-    req.user = user as any;
+    req.user = user as AuthRequest['user'];
     next();
   } catch (error) {
     console.error('Token verification error:', error);

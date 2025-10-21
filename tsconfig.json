@@ -13,7 +13,10 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "allowJs": true,                  // ✅ allows .js files to be compiled
+    "checkJs": false,                 // ✅ skips JS type-checking (optional, depends on your code)
+    "types": ["node", "express"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "client"]
