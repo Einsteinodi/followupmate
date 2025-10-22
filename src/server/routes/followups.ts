@@ -30,8 +30,11 @@ interface CreateFollowUpBody {
   message?: string;
   follow_up_date?: string;
   follow_up_time?: string;
-  priority?: string;
+  priority?: 'low' | 'medium' | 'high';
+  
 }
+
+
 
 interface UpdateStatusBody {
   status: 'pending' | 'completed' | 'cancelled';
@@ -77,10 +80,6 @@ router.get('/', (req: AuthRequest, res: Response) => {
 
 
 
-  console.log('Received follow-up creation request:');
-  console.log('User:', req.user);
-  console.log('Request Body:', req.body);
-
 router.post(
   '/',
   (req: AuthRequest<{}, {}, CreateFollowUpBody>, res: Response) => {
@@ -100,6 +99,10 @@ router.post(
       follow_up_time,
       priority,
     } = value;
+
+
+    console.log('User:', req.user);
+    console.log('Request Body:', req.body);
 
     db.run(
       `INSERT INTO follow_ups 
