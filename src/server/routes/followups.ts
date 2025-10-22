@@ -75,6 +75,12 @@ router.get('/', (req: AuthRequest, res: Response) => {
 // Create New Follow-Up
 // -----------------------------
 
+
+
+  console.log('Received follow-up creation request:');
+  console.log('User:', req.user);
+  console.log('Request Body:', req.body);
+
 router.post(
   '/',
   (req: AuthRequest<{}, {}, CreateFollowUpBody>, res: Response) => {
