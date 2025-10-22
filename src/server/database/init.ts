@@ -1,22 +1,20 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
+import { promisify } from 'util';
 
-
-// Use absolute path
 const dbPath = path.resolve(process.cwd(), 'src/data/followupmate.db');
+console.log('Database path:', dbPath);
+export const db = new sqlite3.Database(dbPath);
 
-console.log('Database path:', dbPath); // This will show us the exact path
+// Promisify the db.run, db.all, and db.get methods so we can use async/await
+const runAsync = promisify(db.run.bind(db));
+const allAsync = promisify(db.all.bind(db));
+const getAsync = promisify(db.get.bind(db));
 
-const db = new sqlite3.Database(dbPath);
-
-export { db };
-
-
-
-export const initializeDatabase = async (): Promise<void> => {
-  return new Promise((resolve, reject) => {
+export const initializeDatabase = async () => {
+  try {
     // Create users table
-    db.run(`
+    await runAsync(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -28,16 +26,10 @@ export const initializeDatabase = async (): Promise<void> => {
         subscription_end_date TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
-    `, (err) => {
-      if (err) {
-        console.error('Error creating users table:', err);
-        reject(err);
-        return;
-      }
-    });
+    `);
 
-    // Create follow_ups table
-    db.run(`
+    // Create follow_ups table without priority initially (we'll add it later if missing)
+    await runAsync(`
       CREATE TABLE IF NOT EXISTS follow_ups (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -51,16 +43,22 @@ export const initializeDatabase = async (): Promise<void> => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
-    `, (err) => {
-      if (err) {
-        console.error('Error creating follow_ups table:', err);
-        reject(err);
-        return;
-      }
-    });
+    `);
+
+    // Check if the priority column exists
+    const columns = await allAsync(`PRAGMA table_info(follow_ups);`);
+    const hasPriorityColumn = columns.some(col => col.name === 'priority');
+
+    if (!hasPriorityColumn) {
+      console.log('Priority column missing, adding it...');
+      await runAsync(`ALTER TABLE follow_ups ADD COLUMN priority TEXT DEFAULT 'medium'`);
+      console.log('✅ Added priority column to follow_ups table');
+    } else {
+      console.log('ℹ️ Priority column already exists');
+    }
 
     // Create templates table
-    db.run(`
+    await runAsync(`
       CREATE TABLE IF NOT EXISTS templates (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -71,16 +69,10 @@ export const initializeDatabase = async (): Promise<void> => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
-    `, (err) => {
-      if (err) {
-        console.error('Error creating templates table:', err);
-        reject(err);
-        return;
-      }
-    });
+    `);
 
     // Create settings table
-    db.run(`
+    await runAsync(`
       CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -92,16 +84,10 @@ export const initializeDatabase = async (): Promise<void> => {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
-    `, (err) => {
-      if (err) {
-        console.error('Error creating settings table:', err);
-        reject(err);
-        return;
-      }
-    });
+    `);
 
-    // Create subscriptions table for Paystack
-    db.run(`
+    // Create subscriptions table
+    await runAsync(`
       CREATE TABLE IF NOT EXISTS subscriptions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -113,16 +99,10 @@ export const initializeDatabase = async (): Promise<void> => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
-    `, (err) => {
-      if (err) {
-        console.error('Error creating subscriptions table:', err);
-        reject(err);
-        return;
-      }
-    });
+    `);
 
-    // Create payments table for Paystack
-    db.run(`
+    // Create payments table
+    await runAsync(`
       CREATE TABLE IF NOT EXISTS payments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -133,28 +113,17 @@ export const initializeDatabase = async (): Promise<void> => {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
-    `, (err) => {
-      if (err) {
-        console.error('Error creating payments table:', err);
-        reject(err);
-        return;
-      }
-    });
+    `);
 
-    // Add Paystack columns to existing users table (if they don't exist)
-    db.run(`ALTER TABLE users ADD COLUMN paystack_customer_id TEXT`, (err) => {
-      // Ignore error if column already exists
-    });
+    // Add Paystack columns to users table if they don't exist — ignore errors for duplicates
+    await runAsync(`ALTER TABLE users ADD COLUMN paystack_customer_id TEXT`).catch(() => {});
+    await runAsync(`ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'active'`).catch(() => {});
+    await runAsync(`ALTER TABLE users ADD COLUMN subscription_end_date TEXT`).catch(() => {});
 
-    db.run(`ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'active'`, (err) => {
-      // Ignore error if column already exists
-    });
+    console.log('✅ Database initialized with all tables and columns');
 
-    db.run(`ALTER TABLE users ADD COLUMN subscription_end_date TEXT`, (err) => {
-      // Ignore error if column already exists
-    });
-
-    console.log('✅ Database initialized with Paystack support');
-    resolve();
-  });
+  } catch (err) {
+    console.error('Error during database initialization:', err);
+    throw err;
+  }
 };
